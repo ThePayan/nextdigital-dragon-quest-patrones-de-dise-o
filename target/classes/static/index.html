@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Quest - Combat Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dq-gold: #c9a227;
+            --dq-gold-dark: #8b6914;
+            --dq-cream: #f5e6c8;
+            --dq-cream-dark: #e8d4b0;
+            --dq-brown: #2d1f0f;
+            --dq-brown-light: #4a3520;
+            --dq-blue: #4a6fa5;
+            --dq-red: #8b2635;
+            --dq-red-bright: #c0392b;
+            --dq-green: #27ae60;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'MedievalSharp', cursive;
+            background: #1a0f0a;
+            color: var(--dq-cream);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Fondo de batalla - usa tu imagen en /images/background.jpg */
+        .battle-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, #1a0f0a 0%, #2d1a12 50%, #1a0f0a 100%);
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .battle-bg.has-image {
+            background-image: url('/images/background.jpg');
+        }
+
+        .battle-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title-frame {
+            display: inline-block;
+            padding: 1rem 2rem;
+            border: 4px solid var(--dq-gold);
+            background: linear-gradient(180deg, var(--dq-brown-light) 0%, var(--dq-brown) 100%);
+            box-shadow: 0 4px 0 var(--dq-gold-dark), 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--dq-gold);
+            text-shadow: 2px 2px 0 var(--dq-gold-dark);
+            letter-spacing: 0.1em;
+        }
+
+        .subtitle { font-size: 0.9rem; color: var(--dq-cream-dark); margin-top: 0.5rem; }
+
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 0;
+            animation: fadeIn 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .start-btn {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            padding: 1.2rem 2.5rem;
+            background: linear-gradient(180deg, var(--dq-gold) 0%, var(--dq-gold-dark) 100%);
+            color: var(--dq-brown);
+            border: 3px solid var(--dq-cream-dark);
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--dq-brown), 0 6px 15px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+            animation: pulse-btn 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-btn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 0 var(--dq-brown), 0 8px 25px rgba(201, 162, 39, 0.4);
+        }
+
+        /* Escena de batalla */
+        .battle-scene {
+            background: rgba(0,0,0,0.5);
+            border: 5px solid var(--dq-gold-dark);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 0 0 2px var(--dq-gold);
+            animation: battleEnter 0.6s ease;
+        }
+
+        @keyframes battleEnter {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .battle-arena {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            min-height: 220px;
+        }
+
+        .fighter-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .fighter-side.player { align-items: flex-start; }
+        .fighter-side.enemy { align-items: flex-end; }
+
+        /* Shake cuando recibe daño */
+        .fighter-side.shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+
+        /* Ataque - personaje "avanza" */
+        .fighter-side.attacking .fighter-sprite {
+            animation: attackLunge 0.4s ease;
+        }
+
+        @keyframes attackLunge {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(30px); }
+            100% { transform: translateX(0); }
+        }
+
+        .fighter-side.enemy.attacking .fighter-sprite {
+            animation: attackLungeEnemy 0.4s ease;
+        }
+
+        @keyframes attackLungeEnemy {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-30px); }
+            100% { transform: translateX(0); }
+        }
+
+        .fighter-sprite {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            border: 3px solid;
+            background: rgba(0,0,0,0.4);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .fighter-sprite img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .fighter-sprite .emoji-fallback {
+            font-size: 3.5rem;
+        }
+
+        .fighter-side.player .fighter-sprite { border-color: var(--dq-blue); box-shadow: 0 0 20px rgba(74, 111, 165, 0.4); }
+        .fighter-side.enemy .fighter-sprite { border-color: var(--dq-red); box-shadow: 0 0 20px rgba(139, 38, 53, 0.4); }
+
+        /* Número de daño flotante */
+        .damage-popup {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--dq-red-bright);
+            text-shadow: 0 0 10px rgba(255,0,0,0.8);
+            animation: damageFloat 1s ease forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes damageFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.3); }
+        }
+
+        .fighter-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .fighter-side.player .fighter-name { color: var(--dq-blue); }
+        .fighter-side.enemy .fighter-name { color: var(--dq-red-bright); }
+
+        .hp-container {
+            width: 100%;
+            max-width: 220px;
+            position: relative;
+        }
+
+        .hp-bar-outer {
+            background: var(--dq-brown);
+            border: 2px solid var(--dq-brown-light);
+            height: 22px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hp-bar-inner {
+            height: 100%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fighter-side.player .hp-bar-inner {
+            background: linear-gradient(90deg, var(--dq-green), #2ecc71);
+        }
+
+        .fighter-side.enemy .hp-bar-inner {
+            background: linear-gradient(90deg, var(--dq-red-bright), #e74c3c);
+        }
+
+        .hp-bar-inner.low { filter: brightness(0.8); animation: hpDanger 0.5s ease-in-out infinite alternate; }
+        @keyframes hpDanger { from { filter: brightness(0.8); } to { filter: brightness(1); } }
+
+        .hp-text { font-size: 0.75rem; margin-top: 0.25rem; color: var(--dq-cream-dark); }
+
+        .command-panel {
+            background: linear-gradient(180deg, var(--dq-brown-light) 0%, var(--dq-brown) 100%);
+            border: 4px solid var(--dq-gold);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 0 var(--dq-gold-dark);
+            animation: fadeIn 0.5s ease 0.3s both;
+        }
+
+        .command-panel h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+            color: var(--dq-gold);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--dq-gold-dark);
+        }
+
+        .attack-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .attack-btn {
+            font-family: 'MedievalSharp', cursive;
+            font-size: 0.95rem;
+            padding: 0.8rem 1rem;
+            background: linear-gradient(180deg, #3d2e20 0%, #2d1f0f 100%);
+            color: var(--dq-cream);
+            border: 2px solid var(--dq-gold-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .attack-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, var(--dq-brown-light) 0%, var(--dq-brown) 100%);
+            border-color: var(--dq-gold);
+            color: var(--dq-gold);
+            transform: translateX(4px);
+            box-shadow: 0 0 15px rgba(201, 162, 39, 0.3);
+        }
+
+        .attack-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .message-box {
+            background: linear-gradient(180deg, #1a120d 0%, #0d0906 100%);
+            border: 4px solid var(--dq-gold-dark);
+            padding: 1rem 1.25rem;
+            max-height: 140px;
+            overflow-y: auto;
+            animation: fadeIn 0.5s ease 0.4s both;
+        }
+
+        .message-box h3 { font-size: 0.8rem; color: var(--dq-gold-dark); margin-bottom: 0.5rem; }
+
+        .log-entry {
+            font-size: 0.85rem;
+            padding: 0.2rem 0;
+            color: var(--dq-cream-dark);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+            animation: logSlide 0.3s ease;
+        }
+
+        @keyframes logSlide {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-entry:last-child { color: var(--dq-cream); font-weight: bold; }
+
+        .game-over {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--dq-gold);
+            text-align: center;
+            padding: 0.5rem;
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px var(--dq-gold); }
+            to { text-shadow: 0 0 20px var(--dq-gold), 0 0 30px var(--dq-gold); }
+        }
+
+        .active-turn .fighter-sprite {
+            animation: turnPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes turnPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(201, 162, 39, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(201, 162, 39, 0.9); }
+        }
+
+        @media (max-width: 600px) {
+            .attack-grid { grid-template-columns: repeat(2, 1fr); }
+            h1 { font-size: 1.2rem; }
+            .fighter-sprite { width: 90px; height: 90px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="battle-bg" id="battle-bg"></div>
+
+    <div class="container">
+        <header>
+            <div class="title-frame">
+                <h1>⚔ DRAGON QUEST ⚔</h1>
+                <p class="subtitle">Combat Simulator · Taller Patrones de Diseño</p>
+            </div>
+        </header>
+
+        <div id="start-screen">
+            <button class="start-btn" onclick="startBattle()">▶ INICIAR BATALLA</button>
+        </div>
+
+        <div id="battle-screen" style="display: none;">
+            <div class="battle-scene">
+                <div class="battle-arena">
+                    <div class="fighter-side player" id="player-side">
+                        <div class="fighter-sprite" id="player-sprite">
+                            <img src="/images/player.png" alt="Héroe" onerror="handleImgError(this, '/images/player.jpg')">
+                            <span class="emoji-fallback" style="display:none">🧙</span>
+                        </div>
+                        <div class="fighter-name" id="player-name">Héroe</div>
+                        <div class="hp-container">
+                            <div class="hp-bar-outer">
+                                <div class="hp-bar-inner" id="player-hp-bar" style="width: 100%"></div>
+                            </div>
+                            <div class="hp-text" id="player-hp-text">150 / 150</div>
+                        </div>
+                    </div>
+                    <div class="fighter-side enemy" id="enemy-side">
+                        <div class="fighter-sprite" id="enemy-sprite">
+                            <img src="/images/enemy.png" alt="Dragón" onerror="handleImgError(this, '/images/enemy.jpg')">
+                            <span class="emoji-fallback" style="display:none">🐉</span>
+                        </div>
+                        <div class="fighter-name" id="enemy-name">Dragón</div>
+                        <div class="hp-container">
+                            <div class="hp-bar-outer">
+                                <div class="hp-bar-inner" id="enemy-hp-bar" style="width: 100%"></div>
+                            </div>
+                            <div class="hp-text" id="enemy-hp-text">120 / 120</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="command-panel">
+                <h3 id="turn-indicator">▶ Tu turno - Elige un ataque:</h3>
+                <div class="attack-grid" id="attack-buttons"></div>
+            </div>
+
+            <div class="message-box">
+                <h3>◆ Mensajes de batalla</h3>
+                <div id="battle-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let battleId = null;
+        const API_BASE = window.location.origin;
+
+        function handleImgError(img, fallbackSrc) {
+            if (img.dataset.tried) {
+                img.style.display = 'none';
+                img.nextElementSibling.style.display = 'block';
+            } else {
+                img.dataset.tried = '1';
+                img.src = fallbackSrc;
+            }
+        }
+
+        // Cargar fondo de batalla (prueba .jpg y .png)
+        (function loadBackground() {
+            const bg = document.getElementById('battle-bg');
+            ['/images/background.jpg', '/images/background.png'].forEach(src => {
+                const img = new Image();
+                img.onload = () => { bg.style.backgroundImage = 'url(' + src + ')'; bg.classList.add('has-image'); };
+                img.src = src;
+            });
+        })();
+
+        async function startBattle() {
+            try {
+                const res = await fetch(API_BASE + '/api/battle/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerName: 'Héroe', enemyName: 'Dragón' })
+                });
+                const data = await res.json();
+                battleId = data.battleId;
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('battle-screen').style.display = 'block';
+                updateUI(data);
+            } catch (e) {
+                console.error(e);
+                alert('Error al iniciar batalla. ¿Está el servidor corriendo en http://localhost:8080?');
+            }
+        }
+
+        async function attack(attackName) {
+            if (!battleId) return;
+            const isPlayerTurn = document.getElementById('player-side').classList.contains('active-turn');
+            if (isPlayerTurn) {
+                document.getElementById('player-side').classList.add('attacking');
+                setTimeout(() => document.getElementById('player-side').classList.remove('attacking'), 400);
+            }
+            try {
+                const res = await fetch(API_BASE + `/api/battle/${battleId}/attack`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attack: attackName })
+                });
+                const data = await res.json();
+                showDamageEffect(data);
+                updateUI(data);
+                if (!data.finished && data.currentTurn === 'enemy') {
+                    setTimeout(enemyTurn, 1200);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function enemyTurn() {
+            document.getElementById('enemy-side').classList.add('attacking');
+            setTimeout(() => document.getElementById('enemy-side').classList.remove('attacking'), 400);
+            try {
+                const res = await fetch(API_BASE + `/api/battle/${battleId}/enemy-turn`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                showDamageEffect(data);
+                updateUI(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showDamageEffect(data) {
+            const damage = data.lastDamage || 0;
+            const target = data.lastDamageTarget || '';
+            if (damage <= 0) return;
+
+            const targetEl = target === 'player' ? document.getElementById('player-side') : document.getElementById('enemy-side');
+            const spriteEl = targetEl.querySelector('.fighter-sprite');
+            targetEl.classList.add('shake');
+            setTimeout(() => targetEl.classList.remove('shake'), 500);
+
+            const popup = document.createElement('div');
+            popup.className = 'damage-popup';
+            popup.textContent = '-' + damage;
+            popup.style.left = '50%';
+            popup.style.top = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            spriteEl.style.position = 'relative';
+            spriteEl.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function updateUI(data) {
+            const player = data.player;
+            const enemy = data.enemy;
+            const isPlayerTurn = data.currentTurn === 'player';
+            const finished = data.finished;
+
+            document.getElementById('player-name').textContent = player.name;
+            document.getElementById('player-hp-bar').style.width = player.hpPercentage + '%';
+            document.getElementById('player-hp-bar').classList.toggle('low', player.hpPercentage < 25);
+            document.getElementById('player-hp-text').textContent = player.currentHp + ' / ' + player.maxHp;
+
+            document.getElementById('enemy-name').textContent = enemy.name;
+            document.getElementById('enemy-hp-bar').style.width = enemy.hpPercentage + '%';
+            document.getElementById('enemy-hp-bar').classList.toggle('low', enemy.hpPercentage < 25);
+            document.getElementById('enemy-hp-text').textContent = enemy.currentHp + ' / ' + enemy.maxHp;
+
+            document.getElementById('player-side').classList.toggle('active-turn', isPlayerTurn && !finished);
+            document.getElementById('enemy-side').classList.toggle('active-turn', !isPlayerTurn && !finished);
+
+            const turnIndicator = document.getElementById('turn-indicator');
+            if (finished) {
+                turnIndicator.innerHTML = '<span class="game-over">🏆 ' + data.battleLog[data.battleLog.length - 1] + '</span>';
+            } else {
+                turnIndicator.textContent = isPlayerTurn ? '▶ Tu turno - Elige un ataque:' : '◆ Turno del enemigo...';
+            }
+
+            const attackButtons = document.getElementById('attack-buttons');
+            if (data.playerAttacks) {
+                attackButtons.innerHTML = data.playerAttacks.map(a =>
+                    `<button class="attack-btn" onclick="attack('${a}')" ${!isPlayerTurn || finished ? 'disabled' : ''}>${formatAttackName(a)}</button>`
+                ).join('');
+            }
+
+            const logDiv = document.getElementById('battle-log');
+            logDiv.innerHTML = (data.battleLog || []).map(msg => `<div class="log-entry">${msg}</div>`).join('');
+            logDiv.parentElement.scrollTop = logDiv.parentElement.scrollHeight;
+        }
+
+        function formatAttackName(name) {
+            return name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+        }
+    </script>
+</body>
+</html>
