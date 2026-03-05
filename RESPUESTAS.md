@@ -76,6 +76,10 @@ Ahora necesitas soportar: equipamiento, buffos temporales, clase (guerrero/mago)
 
 **Pista:** `infrastructure/persistence/BattleRepository.java`
 
+**Solución implementada:**
+- `BattleRepository` se convirtió en Singleton (constructor privado, `getInstance()`); el mapa de batallas es de instancia.
+- `BattleService` usa `BattleRepository.getInstance()` en lugar de `new BattleRepository()`, asegurando un único almacén compartido.
+
 ---
 
 ### 5. Recibir datos de un API externo
@@ -86,10 +90,17 @@ Mañana llega otro proveedor con formato distinto: `player.health`, `player.atta
 
 **Preguntas:**
 - ¿Qué problema hay en poner la lógica de conversión en el controller?
+    - El controller se acopla a formatos externos y duplica lógica por proveedor.
 - ¿Cómo aislar la conversión "formato externo → nuestro dominio" para no ensuciar el controller?
+    - Usando mapeadores específicos por proveedor para construir los objetos de dominio.
 - ¿Qué patrón permite que un objeto "adaptado" se use como si fuera uno de los nuestros?
+    - Adapter.
 
 **Pista:** `interfaces/rest/BattleController.java` — método `startBattleFromExternal`
+
+**Solución implementada:**
+- Se creó `ExternalBattleAdapter` que recibe el JSON externo (claves `fighter1_*`, `fighter2_*`) y lo transforma en un DTO interno (`ExternalBattleInput`).
+- `BattleController` usa el adaptador en `/start/external` para delegar la conversión y mantener el controller limpio y desacoplado del formato externo.
 
 ---
 
