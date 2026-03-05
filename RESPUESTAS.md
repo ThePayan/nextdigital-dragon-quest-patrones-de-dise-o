@@ -30,8 +30,13 @@ Además, te piden un nuevo tipo: "CRÍTICO", con fórmula `daño * 1.5` y 20% de
 - ¿Qué principio SOLID se viola al añadir otro `case` en el switch?
     - Open/Closed
 - ¿Qué patrón permitiría tener fórmulas de daño intercambiables sin tocar el código existente?
-
+    - Strategy
 **Pista:** Cada tipo de ataque (NORMAL, SPECIAL, STATUS) tiene una fórmula distinta.
+
+**Solución implementada:**
+- Se añadió `AttackType.CRITICO` y un ataque "CRITICO" en la factoría.
+- Se creó la interfaz `DamageStrategy` y estrategias concretas `NormalDamageStrategy`, `SpecialDamageStrategy`, `StatusDamageStrategy` (0 daño directo) y `CriticalDamageStrategy` (+50% daño con 20% probabilidad).
+- `CombatEngine` ahora usa un `Map<AttackType, DamageStrategy>` (con `defaultStrategies()`) para delegar el cálculo, eliminando el `switch` y cumpliendo Open/Closed.
 
 ---
 
@@ -63,8 +68,11 @@ Ahora necesitas soportar: equipamiento, buffos temporales, clase (guerrero/mago)
 
 **Preguntas:**
 - ¿Qué pasaría si dos clases crean su propio `BattleRepository` sin el `static`?
+    - Cada clase tendría su propio mapa en memoria y no compartirían batallas.
 - ¿Cómo asegurar que **toda la aplicación** use la misma instancia de almacenamiento?
+    - Proveyendo una única instancia accesible.
 - ¿Qué patrón garantiza una única instancia de una clase?
+    - Singleton.
 
 **Pista:** `infrastructure/persistence/BattleRepository.java`
 
