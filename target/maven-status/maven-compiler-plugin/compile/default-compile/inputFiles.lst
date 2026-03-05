@@ -1,8 +1,10 @@
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/interfaces/rest/BattleController.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/domain/Battle.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/infrastructure/persistence/BattleRepository.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/application/BattleService.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/domain/Character.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/infrastructure/combat/CombatEngine.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/CombatSimulatorApplication.java
-/home/jose-ignacio/Desktop/Taller Patrones de Diseño/src/main/java/com/taller/patrones/domain/Attack.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\domain\Attack.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\application\BattleService.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\CombatSimulatorApplication.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\infrastructure\persistence\BattleRepository.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\domain\Battle.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\infrastructure\combat\DefaultAttackFactory.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\interfaces\rest\BattleController.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\domain\Character.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\infrastructure\combat\CombatEngine.java
+C:\Users\pedro\OneDrive\Escritorio\Universidad\Next-Digital\p2\dragon-quest-patrones-de-dise-o-main\src\main\java\com\taller\patrones\infrastructure\combat\AttackFactory.java

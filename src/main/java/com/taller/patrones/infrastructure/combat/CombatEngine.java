@@ -10,21 +10,22 @@ import com.taller.patrones.domain.Character;
  */
 public class CombatEngine {
 
+    private final AttackFactory attackFactory;
+
+    public CombatEngine() {
+        this(new DefaultAttackFactory());
+    }
+
+    public CombatEngine(AttackFactory attackFactory) {
+        this.attackFactory = attackFactory;
+    }
+
     /**
      * Crea un ataque a partir de su nombre.
      * Cada ataque nuevo requiere modificar este método.
      */
     public Attack createAttack(String name) {
-        String n = name != null ? name.toUpperCase() : "";
-        return switch (n) {
-            case "TACKLE" -> new Attack("Tackle", 40, Attack.AttackType.NORMAL);
-            case "SLASH" -> new Attack("Slash", 55, Attack.AttackType.NORMAL);
-            case "FIREBALL" -> new Attack("Fireball", 80, Attack.AttackType.SPECIAL);
-            case "ICE_BEAM" -> new Attack("Ice Beam", 70, Attack.AttackType.SPECIAL);
-            case "POISON_STING" -> new Attack("Poison Sting", 20, Attack.AttackType.STATUS);
-            case "THUNDER" -> new Attack("Thunder", 90, Attack.AttackType.SPECIAL);
-            default -> new Attack("Golpe", 30, Attack.AttackType.NORMAL);
-        };
+        return attackFactory.createAttack(name);
     }
 
     /**
