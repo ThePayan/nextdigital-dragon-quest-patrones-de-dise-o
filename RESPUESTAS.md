@@ -28,7 +28,7 @@ Además, te piden un nuevo tipo: "CRÍTICO", con fórmula `daño * 1.5` y 20% de
 
 **Preguntas:**
 - ¿Qué principio SOLID se viola al añadir otro `case` en el switch?
-    - Open/Extenda
+    - Open/Closed
 - ¿Qué patrón permitiría tener fórmulas de daño intercambiables sin tocar el código existente?
 
 **Pista:** Cada tipo de ataque (NORMAL, SPECIAL, STATUS) tiene una fórmula distinta.
@@ -53,7 +53,8 @@ Ahora necesitas soportar: equipamiento, buffos temporales, clase (guerrero/mago)
 - ¿Qué patrón permite construir objetos complejos paso a paso?
     - Builder
 **Pista:** Mira cómo se crean los personajes en `BattleService` y en el endpoint `/start/external`.
-**Solución:**
+**Solución implementada:**
+ - Se añadió `Character.builder()` con valores por defecto y setters fluidos; `BattleService` lo usa para instanciar personajes de forma legible y con opcionales.
 ---
 
 ### 4. Un único almacén de batallas
