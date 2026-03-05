@@ -14,7 +14,8 @@ public class DefaultAttackFactory implements AttackFactory {
             "ICE_BEAM", () -> new Attack("Ice Beam", 70, Attack.AttackType.SPECIAL),
             "POISON_STING", () -> new Attack("Poison Sting", 20, Attack.AttackType.STATUS),
             "THUNDER", () -> new Attack("Thunder", 90, Attack.AttackType.SPECIAL),
-            "METEORO", () -> new Attack("Meteoro", 120, Attack.AttackType.SPECIAL)
+            "METEORO", () -> new Attack("Meteoro", 120, Attack.AttackType.SPECIAL),
+            "CRITICO", () -> new Attack("Crítico", 80, Attack.AttackType.CRITICO)
     );
 
     private final Supplier<Attack> defaultAttack =

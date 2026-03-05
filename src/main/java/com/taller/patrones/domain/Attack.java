@@ -20,6 +20,6 @@ public class Attack {
     public AttackType getType() { return type; }
 
     public enum AttackType {
-        NORMAL, SPECIAL, STATUS
+        NORMAL, SPECIAL, STATUS, CRITICO
     }
 }
