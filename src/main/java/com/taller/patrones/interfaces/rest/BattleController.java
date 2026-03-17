@@ -1,5 +1,6 @@
 package com.taller.patrones.interfaces.rest;
 
+import com.taller.patrones.application.BattleFacade;
 import com.taller.patrones.application.BattleService;
 import com.taller.patrones.domain.Battle;
 import com.taller.patrones.domain.Character;
@@ -14,7 +15,7 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class BattleController {
 
-    private final BattleService battleService = new BattleService();
+    private final BattleFacade battleFacade = new BattleFacade();
     private final ExternalBattleAdapter externalBattleAdapter = new ExternalBattleAdapter();
 
     @PostMapping("/start")
@@ -22,7 +23,7 @@ public class BattleController {
         String playerName = body != null && body.containsKey("playerName") ? body.get("playerName") : null;
         String enemyName = body != null && body.containsKey("enemyName") ? body.get("enemyName") : null;
 
-        var result = battleService.startBattle(playerName, enemyName);
+        var result = battleFacade.startBattle(playerName, enemyName);
         Battle battle = result.battle();
 
         return ResponseEntity.ok(Map.of(
@@ -47,7 +48,7 @@ public class BattleController {
     @PostMapping("/start/external")
     public ResponseEntity<Map<String, Object>> startBattleFromExternal(@RequestBody Map<String, Object> body) {
         var input = externalBattleAdapter.adapt(body);
-        var result = battleService.startBattleFromExternal(
+        var result = battleFacade.startBattleFromExternal(
             input.fighter1Name(), input.fighter1Hp(), input.fighter1Atk(),
             input.fighter2Name(), input.fighter2Hp(), input.fighter2Atk()
         );
@@ -68,7 +69,7 @@ public class BattleController {
 
     @GetMapping("/{battleId}")
     public ResponseEntity<Map<String, Object>> getBattle(@PathVariable String battleId) {
-        Battle battle = battleService.getBattle(battleId);
+        Battle battle = battleFacade.getBattle(battleId);
         if (battle == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(toBattleDto(battle));
     }
@@ -76,38 +77,32 @@ public class BattleController {
     @PostMapping("/{battleId}/attack")
     public ResponseEntity<Map<String, Object>> attack(@PathVariable String battleId,
                                                        @RequestBody Map<String, String> body) {
-        Battle battle = battleService.getBattle(battleId);
+        Battle battle = battleFacade.getBattle(battleId);
         if (battle == null) return ResponseEntity.notFound().build();
 
         String attackName = body != null && body.get("attack") != null ? body.get("attack") : "TACKLE";
 
-        if (battle.isPlayerTurn()) {
-            battleService.executePlayerAttack(battleId, attackName);
-        } else {
-            battleService.executeEnemyAttack(battleId, attackName);
-        }
-
-        return ResponseEntity.ok(toBattleDto(battleService.getBattle(battleId)));
+        battleFacade.executeAttack(battleId, attackName);
+        return ResponseEntity.ok(toBattleDto(battleFacade.getBattle(battleId)));
     }
 
     @PostMapping("/{battleId}/enemy-turn")
     public ResponseEntity<Map<String, Object>> enemyTurn(@PathVariable String battleId) {
-        Battle battle = battleService.getBattle(battleId);
+        Battle battle = battleFacade.getBattle(battleId);
         if (battle == null) return ResponseEntity.notFound().build();
         if (battle.isPlayerTurn() || battle.isFinished()) {
             return ResponseEntity.ok(toBattleDto(battle));
         }
-        String attack = BattleService.ENEMY_ATTACKS.get((int) (Math.random() * BattleService.ENEMY_ATTACKS.size()));
-        battleService.executeEnemyAttack(battleId, attack);
-        return ResponseEntity.ok(toBattleDto(battleService.getBattle(battleId)));
+        battleFacade.executeEnemyTurn(battleId);
+        return ResponseEntity.ok(toBattleDto(battleFacade.getBattle(battleId)));
     }
 
     @PostMapping("/{battleId}/undo")
     public ResponseEntity<Map<String, Object>> undoLastAttack(@PathVariable String battleId) {
-        Battle battle = battleService.getBattle(battleId);
+        Battle battle = battleFacade.getBattle(battleId);
         if (battle == null) return ResponseEntity.notFound().build();
-        battleService.undoLastAttack(battleId);
-        return ResponseEntity.ok(toBattleDto(battleService.getBattle(battleId)));
+        battleFacade.undoLastAttack(battleId);
+        return ResponseEntity.ok(toBattleDto(battleFacade.getBattle(battleId)));
     }
 
     private Map<String, Object> toBattleDto(Battle battle) {

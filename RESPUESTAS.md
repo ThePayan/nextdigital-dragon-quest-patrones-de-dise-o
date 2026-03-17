@@ -160,9 +160,15 @@ Ahora el ataque se ejecuta directamente en `applyDamage()`. No hay registro de "
 
 **Preguntas:**
 - ¿Qué problema hay en exponer muchos detalles internos a quien solo quiere "hacer un ataque"?
+- Obligas al cliente a conocer demasiadas clases y pasos internos, aumentando el acoplamiento y la fragilidad del uso.
 - ¿Qué patrón ofrece una interfaz simple que oculta la complejidad del subsistema?
+- Facade.
 
 **Pista:** Piensa en qué necesita saber un cliente para ejecutar un ataque.
+
+**Solución implementada:**
+- Se creó `BattleFacade` como punto de entrada simple para iniciar batalla, atacar, turno enemigo y deshacer.
+- `BattleController` ahora usa la fachada en lugar de coordinar directamente `BattleService`.
 
 ---
 
