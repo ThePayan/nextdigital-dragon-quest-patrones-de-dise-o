@@ -307,6 +307,32 @@
             gap: 0.5rem;
         }
 
+        .utility-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.75rem;
+        }
+
+        .undo-btn {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(180deg, #3b2a25 0%, #241712 100%);
+            color: var(--dq-cream);
+            border: 2px solid var(--dq-gold-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .undo-btn:hover:not(:disabled) {
+            border-color: var(--dq-gold);
+            color: var(--dq-gold);
+            box-shadow: 0 0 12px rgba(201, 162, 39, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .undo-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
         .attack-btn {
             font-family: 'MedievalSharp', cursive;
             font-size: 0.95rem;
@@ -434,6 +460,9 @@
             <div class="command-panel">
                 <h3 id="turn-indicator">▶ Tu turno - Elige un ataque:</h3>
                 <div class="attack-grid" id="attack-buttons"></div>
+                <div class="utility-row">
+                    <button class="undo-btn" id="undo-btn" onclick="undoAttack()">↶ DESHACER</button>
+                </div>
             </div>
 
             <div class="message-box">
@@ -525,6 +554,20 @@
             }
         }
 
+        async function undoAttack() {
+            if (!battleId) return;
+            try {
+                const res = await fetch(API_BASE + `/api/battle/${battleId}/undo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         function showDamageEffect(data) {
             const damage = data.lastDamage || 0;
             const target = data.lastDamageTarget || '';
@@ -577,6 +620,12 @@
                 attackButtons.innerHTML = data.playerAttacks.map(a =>
                     `<button class="attack-btn" onclick="attack('${a}')" ${!isPlayerTurn || finished ? 'disabled' : ''}>${formatAttackName(a)}</button>`
                 ).join('');
+            }
+
+            const undoBtn = document.getElementById('undo-btn');
+            if (undoBtn) {
+                const logCount = (data.battleLog || []).length;
+                undoBtn.disabled = logCount <= 1;
             }
 
             const logDiv = document.getElementById('battle-log');

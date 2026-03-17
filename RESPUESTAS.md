@@ -138,10 +138,19 @@ Ahora el ataque se ejecuta directamente en `applyDamage()`. No hay registro de "
 
 **Preguntas:**
 - ¿Qué tendrías que cambiar para poder "deshacer"?
+- Envolver la lógica del ataque en un objeto que guarde el estado previo para poder revertirlo.
 - ¿Cómo encapsular una acción (ataque) para poder ejecutarla, guardarla y revertirla?
+- Creando un comando con métodos `execute()` y `undo()`, y guardándolo en un historial.
 - ¿Qué patrón trata las acciones como objetos de primera clase?
+- Command.
 
 **Pista:** La lógica del ataque está en `BattleService.applyDamage()`.
+
+**Solución implementada:**
+- Se creó la interfaz `BattleCommand` y el comando `AttackCommand` que ejecuta y revierte el ataque.
+- Encontré la clase `Deque`, el cual poseé una complejidad O(1) para este tipo de interacciones, y me parecía curioso implementarlo 
+- `BattleService` mantiene un historial por batalla y expone `undoLastAttack()`.
+- Se añadió el endpoint `POST /api/battle/{battleId}/undo` para deshacer el último ataque.
 
 ---
 

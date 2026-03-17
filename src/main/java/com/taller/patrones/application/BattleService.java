@@ -5,14 +5,20 @@ import com.taller.patrones.application.observer.AuditLogDamageObserver;
 import com.taller.patrones.application.observer.DamageEvent;
 import com.taller.patrones.application.observer.DamageObserver;
 import com.taller.patrones.application.observer.StatsDamageObserver;
+import com.taller.patrones.application.command.AttackCommand;
+import com.taller.patrones.application.command.BattleCommand;
 import com.taller.patrones.domain.Attack;
 import com.taller.patrones.domain.Battle;
 import com.taller.patrones.domain.Character;
 import com.taller.patrones.infrastructure.combat.CombatEngine;
 import com.taller.patrones.infrastructure.persistence.BattleRepository;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -26,6 +32,7 @@ public class BattleService {
     private final CombatEngine combatEngine = new CombatEngine();
     private final BattleRepository battleRepository = BattleRepository.getInstance();
     private final List<DamageObserver> damageObservers = new ArrayList<>();
+    private final Map<String, Deque<BattleCommand>> battleHistory = new HashMap<>();
 
     public static final List<String> PLAYER_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL", "ICE_BEAM", "POISON_STING", "THUNDER", "METEORO", "CRITICO");
     public static final List<String> ENEMY_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL");
@@ -70,7 +77,7 @@ public class BattleService {
 
         Attack attack = combatEngine.createAttack(attackName);
         int damage = combatEngine.calculateDamage(battle.getPlayer(), battle.getEnemy(), attack);
-        applyDamage(battle, battle.getPlayer(), battle.getEnemy(), damage, attack);
+        applyDamage(battleId, battle, battle.getPlayer(), battle.getEnemy(), damage, attack);
     }
 
     public void executeEnemyAttack(String battleId, String attackName) {
@@ -79,18 +86,13 @@ public class BattleService {
 
         Attack attack = combatEngine.createAttack(attackName != null ? attackName : "TACKLE");
         int damage = combatEngine.calculateDamage(battle.getEnemy(), battle.getPlayer(), attack);
-        applyDamage(battle, battle.getEnemy(), battle.getPlayer(), damage, attack);
+        applyDamage(battleId, battle, battle.getEnemy(), battle.getPlayer(), damage, attack);
     }
 
-    private void applyDamage(Battle battle, Character attacker, Character defender, int damage, Attack attack) {
-        defender.takeDamage(damage);
-        String target = defender == battle.getPlayer() ? "player" : "enemy";
-        battle.setLastDamage(damage, target);
-        battle.log(attacker.getName() + " usa " + attack.getName() + " y hace " + damage + " de daño a " + defender.getName());
-        battle.switchTurn();
-        if (!defender.isAlive()) {
-            battle.finish(attacker.getName());
-        }
+    private void applyDamage(String battleId, Battle battle, Character attacker, Character defender, int damage, Attack attack) {
+        AttackCommand command = new AttackCommand(battle, attacker, defender, attack, damage);
+        command.execute();
+        pushHistory(battleId, command);
         notifyDamageObservers(new DamageEvent(battle, attacker, defender, attack, damage));
     }
 
@@ -108,6 +110,21 @@ public class BattleService {
         for (DamageObserver observer : List.copyOf(damageObservers)) {
             observer.onDamage(event);
         }
+    }
+
+    public void undoLastAttack(String battleId) {
+        Battle battle = battleRepository.findById(battleId);
+        if (battle == null) return;
+
+        Deque<BattleCommand> history = battleHistory.get(battleId);
+        if (history == null || history.isEmpty()) return;
+
+        BattleCommand lastCommand = history.pop();
+        lastCommand.undo();
+    }
+
+    private void pushHistory(String battleId, BattleCommand command) {
+        battleHistory.computeIfAbsent(battleId, id -> new ArrayDeque<>()).push(command);
     }
 
     public BattleStartResult startBattleFromExternal(String fighter1Name, int fighter1Hp, int fighter1Atk,

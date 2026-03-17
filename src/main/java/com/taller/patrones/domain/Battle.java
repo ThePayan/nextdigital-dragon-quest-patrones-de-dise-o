@@ -38,4 +38,7 @@ public class Battle {
     public void finish(String winner) { finished = true; log("¡" + winner + " gana la batalla!"); }
     public boolean isPlayerTurn() { return "player".equals(currentTurn); }
     public void setLastDamage(int damage, String target) { this.lastDamage = damage; this.lastDamageTarget = target; }
+    public void setCurrentTurn(String turn) { this.currentTurn = turn; }
+    public void setFinished(boolean finished) { this.finished = finished; }
+    public void truncateLog(int size) { battleLog.subList(size, battleLog.size()).clear(); }
 }
