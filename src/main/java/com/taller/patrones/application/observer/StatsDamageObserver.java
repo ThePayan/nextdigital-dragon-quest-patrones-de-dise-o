@@ -6,6 +6,6 @@ public class StatsDamageObserver implements DamageObserver {
     public void onDamage(DamageEvent event) {
         double hpLeft = event.getDefender().getHpPercentage();
         System.out.println("[stats] " + event.getDefender().getName()
-            + " hp=" + hpLeft + "%");
+            + " hp=" + String.format("%.2f", hpLeft) + "%");
     }
 }
