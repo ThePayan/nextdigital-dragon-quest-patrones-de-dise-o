@@ -1,11 +1,17 @@
 package com.taller.patrones.application;
 
+import com.taller.patrones.application.observer.AnalyticsDamageObserver;
+import com.taller.patrones.application.observer.AuditLogDamageObserver;
+import com.taller.patrones.application.observer.DamageEvent;
+import com.taller.patrones.application.observer.DamageObserver;
+import com.taller.patrones.application.observer.StatsDamageObserver;
 import com.taller.patrones.domain.Attack;
 import com.taller.patrones.domain.Battle;
 import com.taller.patrones.domain.Character;
 import com.taller.patrones.infrastructure.combat.CombatEngine;
 import com.taller.patrones.infrastructure.persistence.BattleRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,9 +25,16 @@ public class BattleService {
 
     private final CombatEngine combatEngine = new CombatEngine();
     private final BattleRepository battleRepository = BattleRepository.getInstance();
+    private final List<DamageObserver> damageObservers = new ArrayList<>();
 
     public static final List<String> PLAYER_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL", "ICE_BEAM", "POISON_STING", "THUNDER", "METEORO", "CRITICO");
     public static final List<String> ENEMY_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL");
+
+    public BattleService() {
+        registerDamageObserver(new AnalyticsDamageObserver());
+        registerDamageObserver(new AuditLogDamageObserver());
+        registerDamageObserver(new StatsDamageObserver());
+    }
 
     public BattleStartResult startBattle(String playerName, String enemyName) {
         Character player = Character.builder()
@@ -77,6 +90,23 @@ public class BattleService {
         battle.switchTurn();
         if (!defender.isAlive()) {
             battle.finish(attacker.getName());
+        }
+        notifyDamageObservers(new DamageEvent(battle, attacker, defender, attack, damage));
+    }
+
+    public void registerDamageObserver(DamageObserver observer) {
+        if (observer != null) {
+            damageObservers.add(observer);
+        }
+    }
+
+    public void removeDamageObserver(DamageObserver observer) {
+        damageObservers.remove(observer);
+    }
+
+    private void notifyDamageObservers(DamageEvent event) {
+        for (DamageObserver observer : List.copyOf(damageObservers)) {
+            observer.onDamage(event);
         }
     }
 

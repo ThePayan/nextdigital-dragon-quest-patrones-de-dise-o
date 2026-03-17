@@ -115,10 +115,18 @@ Ahora mismo solo existe `battle.log()`. Tendrías que añadir código en `Battle
 
 **Preguntas:**
 - ¿Qué pasa si añades 5 "suscriptores" más? ¿Cuántas líneas tocarías en `applyDamage()`?
+- Terminarías metiendo más lógica en `applyDamage()` y tocando varias líneas por cada nuevo suscriptor, acoplando el servicio y haciéndolo difícil de mantener.
 - ¿Cómo desacoplar "ejecutar ataque" de "notificar a quien le interese"?
+- Publicando un evento de daño y dejando que observadores lo manejen sin conocer al emisor.
 - ¿Qué patrón permite que varios objetos reaccionen a un evento sin que el emisor los conozca?
+- Observer
 
 **Pista:** El método `applyDamage` en `BattleService` es el único que sabe cuándo hay daño.
+
+**Solución propuesta:**
+- Definir un evento de dominio `DamageEvent` y una interfaz `DamageObserver`.
+- `BattleService` actúa como `Subject`: mantiene una lista de observadores y, tras aplicar daño, notifica a todos.
+- Implementar observadores concretos  sin modificar `BattleService` cuando aparezcan nuevos.
 
 ---
 
