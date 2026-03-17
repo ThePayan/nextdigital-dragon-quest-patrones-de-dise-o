@@ -180,9 +180,16 @@ Ahora cada ataque es independiente. No hay forma de agrupar varios.
 
 **Preguntas:**
 - ¿Cómo representar "un ataque que son varios ataques"?
+- Como un objeto que contiene otros ataques y los ejecuta en secuencia.
 - ¿Qué patrón permite tratar un grupo de objetos igual que un objeto individual?
+- Composite.
 
 **Pista:** `Attack` es una unidad. ¿Cómo hacer que varios `Attack` se comporten como uno?
+
+**Solución implementada:**
+- Se creó `CompositeAttack` que hereda de `Attack` y contiene una lista de ataques.
+- `DefaultAttackFactory` registra `COMBO_TRIPLE` como un `CompositeAttack` (Tackle + Slash + Fireball).
+- `BattleService` detecta ataques compuestos y ejecuta cada ataque en orden.
 
 ---
 

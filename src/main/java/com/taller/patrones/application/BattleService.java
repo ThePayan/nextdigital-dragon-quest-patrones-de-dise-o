@@ -10,6 +10,7 @@ import com.taller.patrones.application.command.BattleCommand;
 import com.taller.patrones.domain.Attack;
 import com.taller.patrones.domain.Battle;
 import com.taller.patrones.domain.Character;
+import com.taller.patrones.domain.CompositeAttack;
 import com.taller.patrones.infrastructure.combat.CombatEngine;
 import com.taller.patrones.infrastructure.persistence.BattleRepository;
 
@@ -34,7 +35,7 @@ public class BattleService {
     private final List<DamageObserver> damageObservers = new ArrayList<>();
     private final Map<String, Deque<BattleCommand>> battleHistory = new HashMap<>();
 
-    public static final List<String> PLAYER_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL", "ICE_BEAM", "POISON_STING", "THUNDER", "METEORO", "CRITICO");
+    public static final List<String> PLAYER_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL", "ICE_BEAM", "POISON_STING", "THUNDER", "METEORO", "CRITICO", "COMBO_TRIPLE");
     public static final List<String> ENEMY_ATTACKS = List.of("TACKLE", "SLASH", "FIREBALL");
 
     public BattleService() {
@@ -76,8 +77,7 @@ public class BattleService {
         if (battle == null || battle.isFinished() || !battle.isPlayerTurn()) return;
 
         Attack attack = combatEngine.createAttack(attackName);
-        int damage = combatEngine.calculateDamage(battle.getPlayer(), battle.getEnemy(), attack);
-        applyDamage(battleId, battle, battle.getPlayer(), battle.getEnemy(), damage, attack);
+        executeAttack(battleId, battle, battle.getPlayer(), battle.getEnemy(), attack);
     }
 
     public void executeEnemyAttack(String battleId, String attackName) {
@@ -85,8 +85,23 @@ public class BattleService {
         if (battle == null || battle.isFinished() || battle.isPlayerTurn()) return;
 
         Attack attack = combatEngine.createAttack(attackName != null ? attackName : "TACKLE");
-        int damage = combatEngine.calculateDamage(battle.getEnemy(), battle.getPlayer(), attack);
-        applyDamage(battleId, battle, battle.getEnemy(), battle.getPlayer(), damage, attack);
+        executeAttack(battleId, battle, battle.getEnemy(), battle.getPlayer(), attack);
+    }
+
+    private void executeAttack(String battleId, Battle battle, Character attacker, Character defender, Attack attack) {
+        if (attack instanceof CompositeAttack composite) {
+            for (Attack part : composite.getAttacks()) {
+                if (battle.isFinished() || !defender.isAlive()) {
+                    break;
+                }
+                int damage = combatEngine.calculateDamage(attacker, defender, part);
+                applyDamage(battleId, battle, attacker, defender, damage, part);
+            }
+            return;
+        }
+
+        int damage = combatEngine.calculateDamage(attacker, defender, attack);
+        applyDamage(battleId, battle, attacker, defender, damage, attack);
     }
 
     private void applyDamage(String battleId, Battle battle, Character attacker, Character defender, int damage, Attack attack) {
